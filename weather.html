@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather App</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(to bottom right, #74ebd5, #acb6e5);
+      color: #222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .weather-container {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      padding: 30px;
+      width: 320px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    input {
+      padding: 10px;
+      width: 80%;
+      border: 1px solid #aaa;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      outline: none;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #4a90e2;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #357abd;
+    }
+    .weather-info {
+      margin-top: 20px;
+    }
+    .weather-info img {
+      width: 80px;
+      height: 80px;
+    }
+    .temperature {
+      font-size: 2.5em;
+      font-weight: bold;
+    }
+    .description {
+      text-transform: capitalize;
+      margin: 10px 0;
+    }
+    .details {
+      margin-top: 15px;
+      font-size: 0.9em;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="weather-container">
+    <h2>🌦 Weather App</h2>
+    <input type="text" id="cityInput" placeholder="Enter city name..." />
+    <button id="searchBtn">Search</button>
+    <button id="locationBtn">📍 My Location</button>
+    <div class="weather-info" id="weatherInfo"></div>
+  </div>
+  <script>
+    const apiKey = "ee01249c49fc1ac638c469a47b8789f2"; 
+    const weatherInfo = document.getElementById("weatherInfo");
+    const searchBtn = document.getElementById("searchBtn");
+    const locationBtn = document.getElementById("locationBtn");
+    const cityInput = document.getElementById("cityInput");
+    async function getWeatherByCity(city) {
+      try {
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.cod !== 200) {
+          weatherInfo.innerHTML = `<p>❌ City not found</p>`;
+          return;
+        }
+        displayWeather(data);
+      } catch (error) {
+        weatherInfo.innerHTML = `<p>Error fetching data</p>`;
+      }
+    }
+    function getWeatherByLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`;
+            const response = await fetch(url);
+            const data = await response.json();
+            displayWeather(data);
+          } catch (error) {
+            weatherInfo.innerHTML = `<p>Error fetching location data</p>`;
+          }
+        });
+      } else {
+        weatherInfo.innerHTML = `<p>Geolocation not supported</p>`;
+      }
+    }
+    function displayWeather(data) {
+      const { name, main, weather, wind } = data;
+      weatherInfo.innerHTML = `
+        <h3>${name}</h3>
+        <img src="https://openweathermap.org/img/wn/${weather[0].icon}@2x.png" alt="Weather Icon">
+        <div class="temperature">${main.temp}°C</div>
+        <div class="description">${weather[0].description}</div>
+        <div class="details">
+          <p>💧 Humidity: ${main.humidity}%</p>
+          <p>🌬 Wind: ${wind.speed} m/s</p>
+        </div>
+      `;
+    }
+    searchBtn.addEventListener("click", () => {
+      const city = cityInput.value.trim();
+      if (city) getWeatherByCity(city);
+    });
+    locationBtn.addEventListener("click", getWeatherByLocation);
+    window.onload = getWeatherByLocation;
+  </script>
+</body>
+</html>
